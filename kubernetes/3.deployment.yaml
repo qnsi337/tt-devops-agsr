@@ -1,0 +1,41 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: agsr-deployment
+  namespace: agsr-namespace
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: agsr-app
+  template:
+    metadata:
+      labels:
+        app: agsr-app
+    spec:
+      containers:
+      - name: agsr-app
+        image: pevome8774/agsr_webserver:latest
+        ports:
+        - containerPort: 9091
+          protocol: TCP
+        volumeMounts:
+          - name: configmap-volume
+            mountPath: /app/conf
+            readOnly: true
+        startupProbe:
+          httpGet:
+            path: /health
+            port: 9091
+          failureThreshold: 30
+          periodSeconds: 10
+        livenessProbe:
+          httpGet:
+            path: /health
+            port: 9091
+          initialDelaySeconds: 10
+          periodSeconds: 15
+      volumes:
+        - name: configmap-volume
+          configMap:
+            name: agsr-configmap
